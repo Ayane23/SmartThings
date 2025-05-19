@@ -1,0 +1,254 @@
+package smartthings.dataaccess;
+
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import smartthings.model.Device;
+import smartthings.model.DeviceDTO;
+import smartthings.model.UserDeviceDTO;
+import java.util.List;
+import java.util.ArrayList;
+
+public class DeviceDA extends DataAccess{
+
+    public boolean insertDevice(Device device){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query = "INSERT INTO device " +
+                "(vendor_id ,brand_name ,device_name ,device_description ,min_value ,max_value ,default_value) VALUES " +
+                "(" + device.vendorId + " ,'" + device.brandName + "' ,'" + device.name + "' ,'" + 
+                device.description + "' ," + device.deviceConfiguration.minValue + " ," +
+                device.deviceConfiguration.maxValue + " ," + device.deviceConfiguration.defaultValue + ");"+
+                "SELECT SCOPE_IDENTITY() AS device_id;";
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                var deviceId = rs.getInt("device_id");
+                query = "INSERT INTO device_country (device_id, country_id) VALUES (?, ?)";
+                PreparedStatement ps = connection.prepareStatement(query);
+                for(var country : device.countries){
+                    ps.setInt(1, deviceId);
+                    ps.setInt(2, country);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                return true;
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<DeviceDTO> getDevicesByVendorId(Integer vendorId){
+        connection = getConnection();
+        List<DeviceDTO> result = new ArrayList<DeviceDTO>();
+        try{
+            String query = "SELECT * FROM device WHERE vendor_id = " + vendorId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                DeviceDTO device = new DeviceDTO(rs.getInt("id"), rs.getString("brand_name"), rs.getString("device_name"), rs.getString("device_description"));
+                result.add(device);
+            }
+            return result;
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Integer getDeviceVendorIdByDeviceId(Integer deviceId){
+        connection = getConnection();
+        try{
+            String query = "SELECT TOP 1 * FROM device WHERE id = " + deviceId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return rs.getInt("vendor_id");
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Boolean isDeviceHasUser(Integer deviceId){
+        connection = getConnection();
+        try{
+            String query = "SELECT TOP 1 * FROM account_device WHERE device_id = " + deviceId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return true;
+            }else{
+                return false;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public boolean deleteDevice(Integer deviceId){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query =  "DELETE FROM device_country WHERE device_id = " + deviceId + ";" +
+                            "DELETE FROM device WHERE id = " + deviceId;
+            stmt.executeUpdate(query);
+            return true;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<DeviceDTO> getDevicesByCountry(Integer countryId){
+        connection = getConnection();
+        List<DeviceDTO> result = new ArrayList<DeviceDTO>();
+        try{
+            String query = "SELECT * FROM device d INNER JOIN device_country dc ON d.id=dc.device_id AND dc.country_id=" + countryId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                DeviceDTO device = new DeviceDTO(rs.getInt("id"), rs.getString("brand_name"), rs.getString("device_name"), rs.getString("device_description"));
+                result.add(device);
+            }
+            return result;
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Boolean isDeviceCountryValid(Integer deviceId, Integer countryId){
+        connection = getConnection();
+        try{
+            String query = "SELECT TOP 1 * FROM device_country WHERE device_id = " + deviceId + 
+                            "AND country_id = "+countryId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return true;
+            }else{
+                return false;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public Boolean isUserDeviceValid(Integer userDeviceId, Integer userId){
+        connection = getConnection();
+        try{
+            String query = "SELECT TOP 1 * FROM account_device WHERE id = " + userDeviceId + 
+                            "AND account_id = " + userId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return true;
+            }else{
+                return false;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public Boolean isDeviceValueValid(Integer userDeviceId, Integer value){
+        connection = getConnection();
+        try{
+            String query = "SELECT d.id FROM device d INNER JOIN account_device ad ON d.id = ad.device_id " + 
+                            "AND ad.id = " + userDeviceId + " AND max_value>= " + value + " AND min_value<=" + value;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return true;
+            }else{
+                return false;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public Boolean isUpdateCountrySafe(List<Integer> countries){
+        connection = getConnection();
+        try{
+            String query = "SELECT ad.id FROM account a " +
+		                    "INNER JOIN country c ON a.country = c.id " +
+		                    "INNER JOIN account_device ad ON ad.account_id = a.id " +
+		                    "WHERE c.id NOT IN (";
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                return true;
+            }else{
+                return false;
+            }
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public Boolean insertUserDevice(Integer userId, Integer deviceId){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query = "INSERT INTO account_device VALUES(" + userId + "," + deviceId + 
+            ", (SELECT default_value FROM device WHERE id = " + deviceId +"))";
+            stmt.executeUpdate(query);
+            return true;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Boolean deleteUserDevice(Integer userDeviceId, Integer userId){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query = "DELETE FROM account_device WHERE id = " + userDeviceId + 
+                            " AND account_id = " + userId;
+            stmt.executeUpdate(query);
+            return true;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public List<UserDeviceDTO> getUserDevice(Integer userId){
+        connection = getConnection();
+        List<UserDeviceDTO> result = new ArrayList<UserDeviceDTO>();
+        try{
+            String query = "SELECT ad.id, brand_name, device_name, device_description, current_value, min_value, max_value " + 
+                            "FROM device d INNER JOIN account_device ad ON d.id = ad.device_id AND ad.account_id = " + userId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                UserDeviceDTO device = new UserDeviceDTO(rs.getInt("id"), rs.getString("brand_name"), rs.getString("device_name"), rs.getString("device_description"), rs.getInt("current_value"), rs.getInt("min_value"), rs.getInt("max_value"));
+                result.add(device);
+            }
+            return result;
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Boolean updateUserDevice(Integer userDeviceId, Integer value){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query = "UPDATE account_device SET current_value = " + value + 
+                            " WHERE id = " + userDeviceId;
+            stmt.executeUpdate(query);
+            return true;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    
+}
+

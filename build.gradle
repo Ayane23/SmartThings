@@ -1,0 +1,28 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath "io.ratpack:ratpack-gradle:2.0.0-rc-1"
+  }
+}
+
+apply plugin: "io.ratpack.ratpack-java"
+apply plugin: "idea"
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  runtimeOnly "org.slf4j:slf4j-simple:1.7.36"
+  implementation 'org.junit.jupiter:junit-jupiter-api:5.0.1'
+  implementation 'org.springframework.security:spring-security-crypto:5.8.16'
+  implementation 'commons-logging:commons-logging:1.1.1'
+  implementation files("libs/mssql-jdbc-12.10.0.jre11.jar")
+}
+
+application {
+    // Define the main class for the application
+    mainClassName = 'smartthings.App'
+}
