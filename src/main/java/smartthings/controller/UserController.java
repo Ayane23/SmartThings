@@ -47,7 +47,6 @@ public class UserController {
             if(check!=null && Encryption.verify(user.password, check.password)){
                 var token = Encryption.generateNewToken();
                 var isSucceed = sessionDA.InsertSession(token, check.id, check.role, check.country);
-                System.out.println(isSucceed);
                 if(isSucceed){
                     ctx.render(json(new LoginSucceedResponse(token)));
                 }else{

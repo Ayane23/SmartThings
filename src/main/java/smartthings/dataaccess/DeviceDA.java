@@ -249,6 +249,55 @@ public class DeviceDA extends DataAccess{
         return false;
     }
 
-    
+    public Integer isDeviceUpdateValid(Integer deviceId, String countries, Integer minValue, Integer maxValue){
+        connection = getConnection();
+        Integer result = 0;
+        try{
+            String query = "SELECT ad.id FROM account a " +
+                            "INNER JOIN country c ON a.country = c.id " +
+                            "INNER JOIN account_device ad ON ad.account_id = a.id " +
+                            "WHERE c.id NOT IN (" + countries + ") AND ad.device_id = " + deviceId;
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                result += 1;
+            }
+            query = "SELECT id FROM account_device " +
+                    "WHERE device_id = " + deviceId + 
+                    " AND (current_value<" + minValue + " OR current_value>" + minValue + ")";
+            rs = connection.createStatement().executeQuery(query);
+            if(rs.next()){
+                result += 2;
+            }
+            return result;
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return 4;
+    }
+
+    public boolean updateDevice(Integer deviceId, Device device, String countries){
+        connection = getConnection();
+        try{
+            Statement stmt = connection.createStatement();
+            String query = "UPDATE device SET brand_name = '" + device.brandName + "', " +
+                            "device_name = '" + device.name + "', " +
+                            "device_description = '" + device.description + "', " +
+                            "min_value = " + device.deviceConfiguration.minValue + ", " +
+                            "max_value = " + device.deviceConfiguration.maxValue + ", " +
+                            "default_value = " + device.deviceConfiguration.defaultValue +
+                            "WHERE id = " + deviceId + "; ";
+            query += "DELETE device_country WHERE country_id " +
+                    "NOT IN (" + countries + ") AND device_id = " + deviceId + "; ";
+            query += "INSERT INTO device_country (device_id, country_id) " +
+                    "SELECT " + deviceId + " AS device_id, VALUE FROM STRING_SPLIT('" + countries + 
+                    "',',') AS country_id " + "WHERE VALUE NOT IN " + 
+                    "(SELECT country_id FROM device_country WHERE device_id = " + deviceId + ")";
+            stmt.executeUpdate(query);
+            return true;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
 

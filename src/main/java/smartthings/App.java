@@ -29,6 +29,7 @@ public class App {
                         .post(() -> deviceController.createDevice(ctx))
                         .get(() -> deviceController.getAllDevices(ctx))
                         .delete(() -> deviceController.deleteDevice(ctx))
+                        .put(() -> deviceController.updateDevice(ctx))
                     )
                 )
                 .path("api/user/device", ctx -> ctx
@@ -37,6 +38,11 @@ public class App {
                         .delete(() -> userDeviceController.unregisterDevice(ctx))
                         .get(() -> userDeviceController.getRegisteredDevices(ctx))
                         .put(() -> userDeviceController.updateDeviceValue(ctx))
+                    )
+                )
+                .path("api/user/device/available", ctx -> ctx
+                    .byMethod(m -> m
+                        .get(() -> userDeviceController.getAvailableDevices(ctx))
                     )
                 )
                 .path("api/admin/getUser", ctx -> ctx

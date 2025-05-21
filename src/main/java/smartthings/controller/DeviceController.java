@@ -116,6 +116,75 @@ public class DeviceController {
             ctx.render(json(new GeneralResponse("Failed to delete device")));
         }
     }
+
+    public void updateDevice(Context ctx) {
+        if(!ctx.getRequest().getHeaders().contains("token")){
+            ctx.getResponse().status(401);
+            ctx.render("");
+            return;
+        }
+        var token = ctx.getRequest().getHeaders().get("token");
+        var session = sessionDA.getSessionByToken(token);
+        if(session==null || session.role!=2){
+            ctx.getResponse().status(401);
+            ctx.render("");
+            return;
+        }
+        var sDeviceId = ctx.getRequest().getQueryParams().get("deviceId");
+        if(sDeviceId == null){
+            ctx.getResponse().status(400);
+            ctx.render(json(new GeneralResponse("Missing device id")));
+            return;
+        }
+        var deviceId = Integer.parseInt(sDeviceId);
+        var vendorId = deviceDA.getDeviceVendorIdByDeviceId(deviceId);
+        if(vendorId == null || vendorId != session.userId){
+            ctx.getResponse().status(400);
+            ctx.render(json(new GeneralResponse("Device not found")));
+            return;
+        }
+        
+        ctx.parse(fromJson(Device.class)).then(device ->{
+            if(device.countries.size()<1 || !validateCountries(device.countries)){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Invalid country")));
+                return;
+            }
+            var sCountries = device.countries.toString();
+            sCountries = sCountries.substring(1, sCountries.length()-1);
+            var updateValid = deviceDA.isDeviceUpdateValid(deviceId, sCountries, device.deviceConfiguration.minValue, device.deviceConfiguration.maxValue);
+            if(updateValid == 1){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Device country doesn't cover all registered user")));
+                return;
+            }
+            if(updateValid == 2){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Device minimum-maximum value doesn't cover all registered user")));
+                return;
+            }
+            if(updateValid == 3){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Device country & minimum-maximum value doesn't cover all registered user")));
+                return;
+            }
+            if(updateValid == 4){
+                ctx.getResponse().status(500);
+                ctx.render(json(new GeneralResponse("Something went wrong")));
+                return;
+            }
+
+            var isSucceed = deviceDA.updateDevice(deviceId, device, sCountries);
+            if(isSucceed){
+                ctx.getResponse().status(201);
+                ctx.render(json(new GeneralResponse("Device created successfully")));
+            }else{
+                ctx.getResponse().status(500);
+                ctx.render(json(new GeneralResponse("Failed to create new device")));
+            }
+            
+        });
+    }
 }
 
 class GetAllDevicesResponse{
