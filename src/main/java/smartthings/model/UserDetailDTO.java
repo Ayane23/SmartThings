@@ -2,7 +2,6 @@ package smartthings.model;
 
 import smartthings.model.DeviceConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 public class UserDetailDTO{
     public String email, name, country, dob, address;
     public Integer userId;

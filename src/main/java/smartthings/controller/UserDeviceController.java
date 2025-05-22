@@ -5,6 +5,7 @@ import ratpack.core.jackson.*;
 import smartthings.util.Encryption;
 import smartthings.dataaccess.SessionDA;
 import smartthings.dataaccess.DeviceDA;
+import smartthings.dataaccess.UserDeviceDA;
 import smartthings.model.*;
 import java.util.List;
 import static ratpack.core.jackson.Jackson.fromJson;
@@ -14,10 +15,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class UserDeviceController {
 
     private DeviceDA deviceDA;
+    private UserDeviceDA userDeviceDA;
     private SessionDA sessionDA;
 
     public UserDeviceController(){
         deviceDA = new DeviceDA();
+        userDeviceDA = new UserDeviceDA();
         sessionDA = new SessionDA();
     }
 
@@ -46,7 +49,7 @@ public class UserDeviceController {
             ctx.render(json(new GeneralResponse("Device unvailable for your region")));
             return;
         }
-        var isSucceed = deviceDA.insertUserDevice(session.userId, deviceId);
+        var isSucceed = userDeviceDA.insertUserDevice(session.userId, deviceId);
         if(isSucceed){
             ctx.getResponse().status(201);
             ctx.render(json(new GeneralResponse("Device registered successfully")));
@@ -76,12 +79,12 @@ public class UserDeviceController {
             return;
         }
         var userDeviceId = Integer.parseInt(sUserDeviceId);
-        if(!deviceDA.isUserDeviceValid(userDeviceId, session.userId)){
+        if(!userDeviceDA.isUserDeviceValid(userDeviceId, session.userId)){
             ctx.getResponse().status(400);
             ctx.render(json(new GeneralResponse("Device not found")));
             return;
         }
-        var isSucceed = deviceDA.deleteUserDevice(userDeviceId, session.userId);
+        var isSucceed = userDeviceDA.deleteUserDevice(userDeviceId, session.userId);
         if(isSucceed){
             ctx.getResponse().status(201);
             ctx.render(json(new GeneralResponse("Device deleted successfully")));
@@ -121,7 +124,7 @@ public class UserDeviceController {
             ctx.render("");
             return;
         }
-        var result = deviceDA.getUserDevice(session.userId);
+        var result = userDeviceDA.getUserDevice(session.userId);
         ctx.render(json(new GetRegisteredDevicesResponse(result)));
     }
 
@@ -147,17 +150,17 @@ public class UserDeviceController {
         }
         var userDeviceId = Integer.parseInt(sUserDeviceId);
         var deviceNewValue = Integer.parseInt(sDeviceNewValue);
-        if(!deviceDA.isUserDeviceValid(userDeviceId, session.userId)){
+        if(!userDeviceDA.isUserDeviceValid(userDeviceId, session.userId)){
             ctx.getResponse().status(400);
             ctx.render(json(new GeneralResponse("Device not found")));
             return;
         }
-        if(!deviceDA.isDeviceValueValid(userDeviceId, deviceNewValue)){
+        if(!userDeviceDA.isDeviceValueValid(userDeviceId, deviceNewValue)){
             ctx.getResponse().status(400);
             ctx.render(json(new GeneralResponse("Value out of range")));
             return;
         }
-        var isSucceed = deviceDA.updateUserDevice(userDeviceId, deviceNewValue);
+        var isSucceed = userDeviceDA.updateUserDevice(userDeviceId, deviceNewValue);
         if(isSucceed){
             ctx.getResponse().status(201);
             ctx.render(json(new GeneralResponse("Device value updated successfully")));

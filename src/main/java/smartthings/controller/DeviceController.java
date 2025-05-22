@@ -5,6 +5,7 @@ import ratpack.core.jackson.*;
 import smartthings.util.Encryption;
 import smartthings.dataaccess.SessionDA;
 import smartthings.dataaccess.DeviceDA;
+import smartthings.dataaccess.UserDeviceDA;
 import smartthings.model.*;
 import java.util.List;
 import static ratpack.core.jackson.Jackson.fromJson;
@@ -15,10 +16,12 @@ public class DeviceController {
     
     private DeviceDA deviceDA;
     private SessionDA sessionDA;
+    private UserDeviceDA userDeviceDA;
 
     public DeviceController(){
         deviceDA = new DeviceDA();
         sessionDA = new SessionDA();
+        userDeviceDA = new UserDeviceDA();
     }
 
     public void createDevice(Context ctx) {
@@ -102,7 +105,7 @@ public class DeviceController {
             ctx.render(json(new GeneralResponse("Device not found")));
             return;
         }
-        if(deviceDA.isDeviceHasUser(deviceId)){
+        if(userDeviceDA.isDeviceHasUser(deviceId)){
             ctx.getResponse().status(400);
             ctx.render(json(new GeneralResponse("Device still got active user in the system")));
             return;
@@ -177,10 +180,10 @@ public class DeviceController {
             var isSucceed = deviceDA.updateDevice(deviceId, device, sCountries);
             if(isSucceed){
                 ctx.getResponse().status(201);
-                ctx.render(json(new GeneralResponse("Device created successfully")));
+                ctx.render(json(new GeneralResponse("Device updated successfully")));
             }else{
                 ctx.getResponse().status(500);
-                ctx.render(json(new GeneralResponse("Failed to create new device")));
+                ctx.render(json(new GeneralResponse("Failed to update device")));
             }
             
         });

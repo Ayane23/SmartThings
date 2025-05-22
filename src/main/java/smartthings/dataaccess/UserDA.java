@@ -8,6 +8,7 @@ import smartthings.model.UserDTO;
 import smartthings.model.UserDetailDTO;
 import java.util.List;
 import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserDA extends DataAccess{
     public boolean insertUser(User user){
@@ -32,12 +33,7 @@ public class UserDA extends DataAccess{
             String query = "SELECT TOP 1 * FROM account WHERE email = '" + email + "'";
             ResultSet rs = connection.createStatement().executeQuery(query);
             if(rs.next()){
-                User user = new User();
-                user.id = rs.getInt("id");
-                user.password = rs.getString("password");
-                user.role = rs.getInt("role");
-                user.country = rs.getInt("country");
-                return user;
+                return new User(rs.getInt("id"), rs.getString("password"), rs.getInt("role"), rs.getInt("country"));
             }
         } catch(SQLException e){
             e.printStackTrace();

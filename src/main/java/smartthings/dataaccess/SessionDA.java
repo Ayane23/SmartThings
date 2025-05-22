@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import smartthings.model.Session;
 
 public class SessionDA extends DataAccess{
-    public boolean InsertSession(String token, int userId, int role, int country){
+    public boolean InsertSession(String token, Integer userId, Integer role, Integer country){
         connection = getConnection();
         try{
             Statement stmt = connection.createStatement();

@@ -11,6 +11,7 @@ public class App {
         UserController userController = new UserController();
         DeviceController deviceController = new DeviceController();
         UserDeviceController userDeviceController = new UserDeviceController();
+        CommonController commonController = new CommonController();
         RatpackServer.start(server -> {
             server.serverConfig(serverConfig -> serverConfig.port(13004));
             server.handlers(chain -> chain
@@ -53,6 +54,11 @@ public class App {
                 .path("api/admin/getUsers", ctx -> ctx
                     .byMethod(m -> m
                         .get(() -> userController.getUsers(ctx))
+                    )
+                )
+                .path("api/country-list", ctx -> ctx
+                    .byMethod(m -> m
+                        .get(() -> commonController.getCountries(ctx))
                     )
                 )
             );

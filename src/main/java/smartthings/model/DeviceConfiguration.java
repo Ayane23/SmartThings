@@ -1,7 +1,5 @@
 package smartthings.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class DeviceConfiguration {
-    public int minValue, maxValue, defaultValue;
+    public Integer minValue, maxValue, defaultValue;
 }
