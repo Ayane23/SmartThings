@@ -51,6 +51,11 @@ public class App {
                         .get(() -> userController.getUser(ctx))
                     )
                 )
+                .path("api/admin/getDevices", ctx -> ctx
+                    .byMethod(m -> m
+                        .get(() -> deviceController.getAllDevicesAdmin(ctx))
+                    )
+                )
                 .path("api/admin/getUsers", ctx -> ctx
                     .byMethod(m -> m
                         .get(() -> userController.getUsers(ctx))

@@ -4,7 +4,7 @@ public class DataAccess {
     private String server = "localhost:1433";
     private String database = "smart_things";
     private String user = "sa";
-    private String password = "";
+    private String password = "Galileo27";
     public Connection connection;
 
     public Connection getConnection(){

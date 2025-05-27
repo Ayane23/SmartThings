@@ -23,7 +23,7 @@ public class SessionDA extends DataAccess{
     public Session getSessionByToken(String token){
         connection = getConnection();
         try{
-            String query = "SELECT TOP 1 * FROM session WHERE token = '" + token + "'";
+            String query = "SELECT TOP 1 * FROM session WHERE token = '" + token + "' AND expired_at > GETDATE()";
             ResultSet rs = connection.createStatement().executeQuery(query);
             if(rs.next()){
                 Session session = new Session(rs.getString("token"), rs.getInt("role"), rs.getInt("account_id"), rs.getInt("country"));

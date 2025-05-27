@@ -188,12 +188,37 @@ public class DeviceController {
             
         });
     }
+
+    public void getAllDevicesAdmin(Context ctx) {
+        if(!ctx.getRequest().getHeaders().contains("token")){
+            ctx.getResponse().status(401);
+            ctx.render("");
+            return;
+        }
+        var token = ctx.getRequest().getHeaders().get("token");
+        var session = sessionDA.getSessionByToken(token);
+        if(session==null || session.role!=1){
+            ctx.getResponse().status(401);
+            ctx.render("");
+            return;
+        }
+        var result = deviceDA.getDevicesAdmin();
+        ctx.render(json(new GetAllDevicesAdminResponse(result)));
+    }
 }
 
 class GetAllDevicesResponse{
     @JsonProperty("devices")
     List<DeviceDTO> devices;
     public GetAllDevicesResponse(List<DeviceDTO> devices){
+        this.devices = devices;
+    }
+}
+
+class GetAllDevicesAdminResponse{
+    @JsonProperty("devices")
+    List<AdminDeviceDTO> devices;
+    public GetAllDevicesAdminResponse(List<AdminDeviceDTO> devices){
         this.devices = devices;
     }
 }

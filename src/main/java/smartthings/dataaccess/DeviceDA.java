@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import smartthings.model.Device;
 import smartthings.model.DeviceDTO;
 import smartthings.model.UserDeviceDTO;
+import smartthings.model.AdminDeviceDTO;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -169,6 +170,23 @@ public class DeviceDA extends DataAccess{
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<AdminDeviceDTO> getDevicesAdmin(){
+        connection = getConnection();
+        List<AdminDeviceDTO> result = new ArrayList<AdminDeviceDTO>();
+        try{
+            String query = "SELECT d.id, d.vendor_id, d.brand_name, d.device_name, d.device_description, COUNT(ad.id) AS user_count FROM device d LEFT JOIN account_device ad ON d.id=ad.device_id GROUP BY d.id, d.vendor_id, d.brand_name, d.device_name, d.device_description";
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                AdminDeviceDTO device = new AdminDeviceDTO(rs.getInt("id"), rs.getInt("vendor_id"), rs.getString("brand_name"), rs.getString("device_name"), rs.getString("device_description"), rs.getInt("user_count"));
+                result.add(device);
+            }
+            return result;
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 
