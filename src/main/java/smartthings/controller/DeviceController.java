@@ -43,6 +43,11 @@ public class DeviceController {
                 ctx.render(json(new GeneralResponse("Invalid country")));
                 return;
             }
+            if(!validateDevice(device)){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Invalid device data")));
+                return;
+            }
             device.vendorId = session.userId;
             var isSucceed = deviceDA.insertDevice(device);
             if(isSucceed){
@@ -153,6 +158,11 @@ public class DeviceController {
                 ctx.render(json(new GeneralResponse("Invalid country")));
                 return;
             }
+            if(!validateDevice(device)){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Invalid device data")));
+                return;
+            }
             var sCountries = device.countries.toString();
             sCountries = sCountries.substring(1, sCountries.length()-1);
             var updateValid = deviceDA.isDeviceUpdateValid(deviceId, sCountries, device.deviceConfiguration.minValue, device.deviceConfiguration.maxValue);
@@ -204,6 +214,13 @@ public class DeviceController {
         }
         var result = deviceDA.getDevicesAdmin();
         ctx.render(json(new GetAllDevicesAdminResponse(result)));
+    }
+
+    public boolean validateDevice(Device device){
+        if(device.brandName==null || device.brandName=="") return false;
+        if(device.name==null || device.name=="") return false;
+        if(device.description==null || device.description=="") return false;
+        return true;
     }
 }
 

@@ -23,6 +23,11 @@ public class UserController {
 
     public void createUser(Context ctx) {
         ctx.parse(fromJson(User.class)).then(user ->{
+            if(!validateUser(user)){
+                ctx.getResponse().status(400);
+                ctx.render(json(new GeneralResponse("Invalid user data")));
+                return;
+            }
             var check = userDA.getUserByEmail(user.email);
             if(check==null){
                 user.password = Encryption.hash(user.password);
@@ -97,6 +102,15 @@ public class UserController {
         var userDeviceId = Integer.parseInt(sUserDeviceId);
         var result = userDA.getUserDetail(userDeviceId);
         ctx.render(json(result));
+    }
+
+    public boolean validateUser(User user){
+        if(user.name==null || user.name=="") return false;
+        if(user.email==null || user.email=="") return false;
+        if(user.password==null || user.password=="") return false;
+        if(user.dob==null || user.dob=="") return false;
+        if(user.address==null || user.address=="") return false;
+        return true;
     }
 }
 
